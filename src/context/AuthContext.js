@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { createSolanaWallet } from '../services/privy';
+import { Alert } from 'react-native';
 
 export const AuthContext = createContext();
 
@@ -18,15 +19,24 @@ export const AuthProvider = ({ children }) => {
       address: walletData.address,
       id: walletData.id,
     });
-
+    //Alert.alert('walletData.address', walletData.address);
     console.log('New wallet:', walletData);
   };
 
+   const logout = () => {
+    console.log('Logging out...');
+    setUser(null);
+    setWallet(null);
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, wallet, login }}>
+    <AuthContext.Provider value={{ user, wallet, login,logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+
