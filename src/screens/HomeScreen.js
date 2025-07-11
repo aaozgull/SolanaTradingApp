@@ -1,84 +1,47 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View,Button, FlatList, SafeAreaView, Text, StyleSheet } from 'react-native';
+// screens/HomeScreen.js
+import React, { useState } from 'react';
+import { SafeAreaView, View, ScrollView, Text, Button, FlatList, StyleSheet } from 'react-native';
 import SearchBar from '../components/SearchBar';
 import PortfolioBalance from '../components/PortfolioBalance';
-import TokenCard from '../components/TokenCard';
-import BottomNavigation from '../components/BottomNavigation';
-import { fetchTrendingTokens } from '../services/coingecko';
-import { AuthContext } from '../context/AuthContext';
-import { SOLANA_MINTS } from '../constants/SOLANA_MINTS';
+import PeriodSelector from '../components/PeriodSelector';
+import PortfolioCard from '../components/PortfolioCard';
+import FeaturedTokenCard from '../components/FeaturedTokenCard';
+import ActionButtons from '../components/ActionButtons';
+//import PortfolioLineChart from '../components/PortfolioLineChart';
 
 export default function HomeScreen({ navigation }) {
-  const [query, setQuery] = useState('');
-  const [tokens, setTokens] = useState([]);
-  const [balance, setBalance] = useState(1000.0); // Mock balance
-
-  const { user, wallet } = useContext(AuthContext);
-
-  useEffect(() => {
-    const loadTokens = async () => {
-      const data = await fetchTrendingTokens();
-      setTokens(data);
-    };
-    loadTokens();
-  }, []);
-
-  const filteredTokens = tokens.filter(token =>
-    token.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const [period, setPeriod] = useState('1M');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#121212', padding: 16 }}>
-      {/* ✅ Add your greeting + wallet address */}
-      <Text style={styles.title}>👋 Welcome, {user?.email}</Text>
-      <Text style={styles.sub}>Wallet: {wallet?.address}</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+      <SearchBar />
+      <PortfolioBalance balance={192615.98} change={1764} />
+       <View style={{ height: 200, backgroundColor: '#1E1E1E', borderRadius: 12 }} /> 
+      {/* <PortfolioLineChart/> */}
 
-      <SearchBar query={query} setQuery={setQuery} />
+      <PeriodSelector selected={period} onSelect={setPeriod} />
+    
+      <ActionButtons/>
+      <Text style={styles.heading}>Portfolio positions</Text>
+      <PortfolioCard symbol="V" name="V" amount={275.84} value={273.25} change={-0.84} color='blue'/>
+      <PortfolioCard symbol="S" name="SPOT" amount={340.28} value={379.70} change={8.73} color='green'/>
+      <PortfolioCard symbol="M" name="MA" amount={492.62} value={491.24} change={-0.28} color='red'/>
 
-      {/* ✅ You can keep or remove this PortfolioBalance, up to you */}
-      <PortfolioBalance balance={balance} />
-<Button
-    title="Pick a Token"
-    onPress={() => navigation.navigate('TokenList')}
-  />
-      <FlatList
-  data={filteredTokens}
-  keyExtractor={(item) => item.id}
-  renderItem={({ item }) => {
-    const enrichedToken = {
-      symbol: item.symbol.toUpperCase(),
-      name: item.name,
-      price: item.current_price,
-      priceChange24h: item.price_change_percentage_24h,
-      mintAddress: SOLANA_MINTS[item.symbol.toUpperCase()] || '',
-    };
+      <Text style={styles.heading}>Featured Tokens</Text>
+      <FeaturedTokenCard symbol="BTC" name="Bitcoin" value="66,729.90" change={5.2} color='orange'/>
+      <FeaturedTokenCard symbol="SOL" name="Solana" value="227.80" change={3.8} color='skyblue'/>
+       <FeaturedTokenCard symbol="Ethereum" name="ETH" value="351.80" change={1.2} color='purple'/>
 
-    return (
-      <TokenCard
-        token={enrichedToken}
-        onPress={() =>
-          navigation.navigate('TokenDetail', { token: enrichedToken })
-        }
-      />
-    );
-  }}
-/>
-
-
-      <BottomNavigation navigation={navigation} />
+     
+      </ScrollView>
+     
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 20,
-    color: '#fff',
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 14,
-    color: '#aaa',
-    marginBottom: 16,
-  },
+  container: { flex: 1, backgroundColor: '#121212', padding: 16 },
+  heading: { color: '#fff', fontWeight: 'bold', marginVertical: 12 },
+  actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 16 },
 });

@@ -5,16 +5,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { AuthProvider } from './src/context/AuthContext';
 import { WalletProvider } from './src/context/WalletContext';
-import AppNavigator from './src/AppNavigator';
-
-const Stack = createNativeStackNavigator();
+import BottomNavigator from './src/BottomNavigator';
+//import BottomNavigator from './src/BottomNavigator ';
 
 export default function App() {
   return (
     <AuthProvider>
       {/* <WalletProvider> */}
     <NavigationContainer>
-      <AppNavigator/>
+      <BottomNavigator/>
     </NavigationContainer>
     {/* </WalletProvider> */}
     </AuthProvider>

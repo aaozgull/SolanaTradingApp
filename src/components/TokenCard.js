@@ -1,18 +1,31 @@
 // src/components/TokenCard.js
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 
 export default function TokenCard({ token, onPress }) {
-  const changeColor = token.priceChange24h >= 0 ? '#0f0' : '#f00';
+  const priceChange = token.priceChange24h || 0;
+  const isPositive = priceChange >= 0;
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.card}>
-      <Text style={styles.name}>{token.name} ({token.symbol})</Text>
-      <Text style={styles.price}>${token.price.toFixed(2)}</Text>
-      <Text style={[styles.change, { color: changeColor }]}>
-        {token.priceChange24h.toFixed(2)}%
-      </Text>
-      <Text style={styles.price}>{token. mintAddress}</Text>
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <View style={styles.left}>
+        {token.icon ? (
+          <Image source={{ uri: token.icon }} style={styles.icon} />
+        ) : (
+          <View style={styles.placeholderIcon} />
+        )}
+        <View>
+          <Text style={styles.symbol}>{token.symbol}</Text>
+          <Text style={styles.name}>{token.name}</Text>
+        </View>
+      </View>
+      <View style={styles.right}>
+        <Text style={styles.price}>${token.price.toFixed(2)}</Text>
+        <Text style={[styles.change, { color: isPositive ? '#0f0' : '#f44' }]}>
+          {isPositive ? '📈 +' : '📉 '}
+          {priceChange.toFixed(2)}%
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -20,11 +33,25 @@ export default function TokenCard({ token, onPress }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#1E1E1E',
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 6,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  name: { color: '#FFF', fontSize: 16 },
-  price: { color: '#FFF', fontSize: 14 },
-  change: { fontSize: 14 },
+  left: { flexDirection: 'row', alignItems: 'center' },
+  icon: { width: 40, height: 40, marginRight: 12, borderRadius: 20 },
+  placeholderIcon: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#444',
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  symbol: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  name: { color: '#AAA', fontSize: 12 },
+  right: { alignItems: 'flex-end' },
+  price: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  change: { fontSize: 12 },
 });

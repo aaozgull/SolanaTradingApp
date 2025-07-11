@@ -1,28 +1,39 @@
 // src/screens/TokenListScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
-// src/screens/TokenListScreen.js
-import { fetchJupiterTokens } from '../services/jupiter'; 
 
+import BottomNavigation from '../components/BottomNavigation';
+import { fetchJupiterTokens, searchJupiterTokens } from '../services/jupiter';
 
 export default function TokenListScreen({ navigation }) {
   const [tokens, setTokens] = useState([]);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    
     const loadTokens = async () => {
-      const data = await fetchJupiterTokens();
-      Alert.alert('Loaded', `Got ${data.length} tokens`);
-      setTokens(data);
+      try {
+        const data = await fetchJupiterTokens();
+        console.log('Loaded tokens:', data);
+        setTokens(data);
+      } catch (err) {
+        console.error('Token fetch error:', err);
+        Alert.alert('Error', err.message);
+      }
     };
     loadTokens();
   }, []);
 
-  const filteredTokens = tokens.filter((t) =>
-    t.symbol.toLowerCase().includes(query.toLowerCase()) ||
-    t.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const handleSearch = async (text) => {
+    setQuery(text);
+    if (text.length > 0) {
+      const data = await searchJupiterTokens(text);
+      console.log('Search results:', data);
+      setTokens(data);
+    } else {
+      const data = await fetchJupiterTokens();
+      setTokens(data);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -31,11 +42,11 @@ export default function TokenListScreen({ navigation }) {
         placeholder="Search tokens..."
         placeholderTextColor="#888"
         value={query}
-        onChangeText={setQuery}
+        onChangeText={handleSearch}
       />
       <FlatList
-        data={filteredTokens}
-        keyExtractor={(item) => item.address}
+        data={tokens}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.tokenItem}
@@ -44,8 +55,8 @@ export default function TokenListScreen({ navigation }) {
                 token: {
                   name: item.name,
                   symbol: item.symbol,
-                  mintAddress: item.address, // ✅ Valid mint
-                  price: item.price || 0,
+                  mintAddress: item.id,
+                  price: item.usdPrice || 0,
                 },
               })
             }
@@ -54,12 +65,13 @@ export default function TokenListScreen({ navigation }) {
           </TouchableOpacity>
         )}
       />
+       <BottomNavigation navigation={navigation} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent:'center', paddingTop:60,backgroundColor: '#121212', padding: 16 },
+  container: { flex: 1, paddingTop: 60, backgroundColor: '#121212', padding: 16 },
   input: {
     backgroundColor: '#1E1E1E',
     color: '#FFF',
