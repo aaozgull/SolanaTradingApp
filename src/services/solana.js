@@ -3,28 +3,15 @@ import { Alert } from 'react-native';
 
 export async function getAccountBalance(walletAddress) {
   try {
-    console.log('walletAddress:', walletAddress);
-
     if (!walletAddress) {
       throw new Error('Invalid wallet address');
     }
 
     const connection = new Connection('https://api.mainnet-beta.solana.com');
-
-    console.log('Connection established');
-     
-
     const publicKey = new PublicKey(walletAddress);
-
-    console.log('PublicKey created:', publicKey.toBase58());
-   //Alert.alert('PublicKey created:', publicKey.toBase58());
-    const balanceLamports = await connection.getBalance(publicKey);
-   //Alert.alert('balanceLamports. ', balanceLamports);
-
+    const balanceLamports = await connection.getBalance(publicKey);   
     const balanceSOL = balanceLamports / 1e9;
-
-    console.log(`Balance: ${balanceSOL} SOL`);
-
+    
     return balanceSOL;
   } catch (err) {
     console.error('getAccountBalance error:', err);

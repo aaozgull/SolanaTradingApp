@@ -20,59 +20,47 @@ import ActionButtons from '../components/ActionButtons';
 import { useAuth } from '../context/AuthContext';
 import { getAccountBalance, getSolPrice } from '../services/solana';
 import WalletInfo from '../components/WalletInfo';
+import useTokens from '../hooks/useTokens';
+import { useTokenContext } from '../context/TokenContext';
 
 export default function HomeScreen({ navigation }) {
   const [period, setPeriod] = useState('1M');
   const [query, setQuery] = useState('');
-  const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(true);
+ // const [tokens, setTokens] = useState([]);
+ // const [loading, setLoading] = useState(true);
 
   const { wallet,logout } = useAuth();
   const [balance, setBalance] = useState(0);
+  //const tokens1 = useTokens();
+  const { tokens, loading } = useTokenContext();
+
+  
 
   useEffect(() => {
-    Alert.alert('wallet home screen', wallet);
+   
     const fetchBalance = async () => {
       if (!wallet) return;
 
       try {
-        //Alert.alert('wallet.address home screen', wallet.address);
-        <WalletInfo address={wallet.address}/>
-       const solBalance = await getAccountBalance(wallet.address);
-       Alert.alert('solBalance', solBalance);
-       // const solPrice = await getSolPrice();
-       //  Alert.alert('solPrice', solPrice);
-        //const balanceUSD = solBalance * solPrice;
-       // setBalance(balanceUSD);
+       
+       const solBalance = await getAccountBalance(wallet.address);       
+        const solPrice = await getSolPrice();      
+       const balanceUSD = solBalance * solPrice;
+        setBalance(balanceUSD);
       } catch (err) {
         console.error(err);
-        Alert.alert('Error home screen', err);
+     
       }
     };
 
     fetchBalance();
   }, [wallet]);
 
-  // Example: Fetch dynamic tokens (replace with your CoinGecko or Jupiter call)
-  useEffect(() => {
-    const fetchTokens = async () => {
-      try {
-        // Example fetch — replace with your real endpoint!
-        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd');
-        const data = await res.json();
-        setTokens(data.slice(0, 5)); // Limit for testing
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const validTokens = tokens.filter((t) => t.mintAddress);
 
-    fetchTokens();
-  }, []);
-
+  
   // Filter tokens by search query
-  const filteredTokens = tokens.filter((token) =>
+  const filteredTokens = validTokens.filter((token) =>
     token.name.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -91,7 +79,7 @@ export default function HomeScreen({ navigation }) {
             <>
               <SearchBar query={query} setQuery={setQuery} />
               {/* <WalletInfo/> */}
-              <PortfolioBalance balance={balance} change={1764} />
+              <PortfolioBalance balance={balance} change={balance * 0.02} />
               <View style={{ height: 200, backgroundColor: '#1E1E1E', borderRadius: 12 }} />
               <PeriodSelector selected={period} onSelect={setPeriod} />
               <ActionButtons />
@@ -108,11 +96,18 @@ export default function HomeScreen({ navigation }) {
               amount={item.current_price.toFixed(2)}
               value={item.current_price.toFixed(2)}
               change={item.price_change_percentage_24h}
+             // mintAddress={item.mintAddress}
               color={item.price_change_percentage_24h > 0
-    ? 'green'
-    : item.price_change_percentage_24h < -0.50
-      ? 'red'
-      : 'blue'}
+                  ? 'green'
+                  : item.price_change_percentage_24h < -0.50
+                    ? 'red'
+                    : 'blue'}
+                  onPress={() =>
+                  navigation.navigate('Tokens', {
+                  screen: 'TokenDetail',
+                  params: { token: item, balance: balance },
+                })
+              }
             />
           )}
           ListFooterComponent={
@@ -125,12 +120,14 @@ export default function HomeScreen({ navigation }) {
                     name={token.name}
                     value={token.current_price.toFixed(2)}
                     change={token.price_change_percentage_24h.toFixed(2)}
+                   // mintAddress={token.mintAddress}
                     color={
                       index === 0 ? 'orange'
                       : index === 1 ? 'skyblue'
                       : index === 2 ? 'purple'
                       : 'gray' // fallback if needed
                     }
+                    onPress={() => navigation.navigate('TokenDetail', { token, 'balance':balance })}
                   />
                 ))}
 

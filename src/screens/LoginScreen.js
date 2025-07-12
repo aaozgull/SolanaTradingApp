@@ -1,38 +1,35 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Button, Text, StyleSheet } from 'react-native';
+import { usePrivy } from '@privy-io/expo';
+import ActionButton from '../components/ActionButton';
 
 export default function LoginScreen() {
-  const navigation  = useNavigation();
-  const [email, setEmail] = useState('');
-  const { login } = useAuth();
+  const { login, user, wallets, isReady } = usePrivy();
+
+  if (!isReady) {
+    return <Text style={{ color: '#fff' }}>Loading Privy...</Text>;
+  }
 
   const handleLogin = async () => {
     try {
-      await login(email);
-      Alert.alert('Login Success', `Wallet created for ${email}`);
-      navigation.navigate('Home');
+      await login();
+      console.log('Logged in!', user);
+
+      const signer = await wallets[0].getSigner({ chain: 'solana' });
+      console.log('Signer:', signer);
     } catch (err) {
-      console.error('Login failed:', err);
-      Alert.alert('Error', 'Something went wrong during login.');
+      console.error('Login error:', err);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login with Privy (REST)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Your email"
-        value={email}
-        autoCapitalize="none"
-        onChangeText={setEmail}
-      />
-      <Button title="Login & Create Wallet" onPress={handleLogin} />
+      <Text style={styles.title}>Login with Privy</Text>
+
+      <ActionButton title="Login with Privy" onPress={handleLogin} />
 
       <Text style={styles.info}>
-        This creates a real Solana wallet via Privy REST API.
+        Your Solana wallet is created automatically via Privy.
       </Text>
     </View>
   );
@@ -41,6 +38,5 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#121212' },
   title: { fontSize: 24, color: '#fff', marginBottom: 24, textAlign: 'center' },
-  input: { backgroundColor: '#1e1e1e', borderRadius: 8, padding: 16, color: '#fff', marginBottom: 16 },
   info: { marginTop: 24, color: '#aaa', textAlign: 'center' },
 });

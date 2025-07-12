@@ -12,7 +12,7 @@ export const fetchJupiterCategoryTokens = async (category) => {
 // services/jupiter.js
 export async function getTokens() {
   try {
-    const response = await fetch('https://quote-api.jup.ag/v6/tokens');
+    const response = await fetch('https://cache.jup.ag/tokens');
     const json = await response.json();
     return json;
   } catch (error) {
@@ -38,3 +38,27 @@ export const getQuote = async ({ inputMint, outputMint, amount }) => {
   });
   return data;
 };
+
+// services/jupiter.js
+
+export async function getSwapTransaction(quote, userPublicKey) {
+  const response = await fetch('https://quote-api.jup.ag/v6/swap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quoteResponse: quote,
+      userPublicKey,
+      wrapUnwrapSOL: true,   // optional for SOL
+      slippageBps: 50,       // 0.5% slippage tolerance
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Swap transaction failed');
+  }
+
+  const json = await response.json();
+  return json.swapTransaction;  // <-- base64 encoded transaction
+}
+
+

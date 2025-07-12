@@ -1,11 +1,13 @@
 // components/PortfolioCard.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function PortfolioCard({ symbol, name, amount, value, change ,color}) {
+export default function PortfolioCard({ symbol, name, amount, value, change, color, onPress }) {
   return (
-    <View style={styles.card}>
-      <View style={[styles.icon,{backgroundColor: color}]}><Text style={styles.iconText}>{symbol[0]}</Text></View>
+    <TouchableOpacity onPress={onPress} style={styles.card}>
+      <View style={[styles.icon, { backgroundColor: color }]}>
+        <Text style={styles.iconText}>{symbol[0]}</Text>
+      </View>
       <View style={styles.info}>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.amount}>{amount} st</Text>
@@ -16,13 +18,20 @@ export default function PortfolioCard({ symbol, name, amount, value, change ,col
           {change >= 0 ? '+' : ''}{change.toFixed(2)}%
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 8, padding: 12, marginBottom: 12, alignItems: 'center' },
-  icon: { width: 32, height: 32, borderRadius: 8,  justifyContent: 'center', alignItems: 'center' },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  icon: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   iconText: { color: '#fff' },
   info: { flex: 1, marginLeft: 12 },
   name: { color: '#fff', fontWeight: 'bold' },

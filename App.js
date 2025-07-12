@@ -1,28 +1,37 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-
-import { useAuth, AuthProvider } from './src/context/AuthContext';
-import { WalletProvider } from './src/context/WalletContext';
-import BottomNavigator from './src/BottomNavigator';
+import { PrivyProvider ,usePrivy} from '@privy-io/expo';
+//import { privy } from './src/lib/privyClient';
+import BottomNavigator from './src/navigations/BottomNavigator';
 import LoginScreen from './src/screens/LoginScreen';
+import { TokenProvider } from './src/context/TokenContext';
+import { PRIVY_APP_ID, PRIVY_ClIENT_ID } from './src/Utils/Config';
 //import BottomNavigator from './src/BottomNavigator ';
 
 export default function App() {
-  return (
-    <AuthProvider>
-      {/* <WalletProvider> */}
+  return (  
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      clientId={PRIVY_ClIENT_ID}
+    >
+    
+      <TokenProvider>
     <NavigationContainer>
        <RootNavigator />
     </NavigationContainer>
-    {/* </WalletProvider> */}
-    </AuthProvider>
+    </TokenProvider>
+    
+    </PrivyProvider>
   );
 }
 
+
+
 function RootNavigator() {
-  const { user } = useAuth();
+  const { user, isReady } = usePrivy();
+
+  if (!isReady) return null; // or your Loading screen
 
   return user ? <BottomNavigator /> : <LoginScreen />;
 }

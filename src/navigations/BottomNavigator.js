@@ -1,13 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet, Alert } from 'react-native';
-import HomeScreen from '../src/screens/HomeScreen';
-import TokenDetailScreen from '../src/screens/TokenDetailScreen';
+import AppNavigator from './AppNavigator';
+import TokensStack from './TokensStack';
 
 const Tab = createBottomTabNavigator();
 
 function CustomTabBarIcon({ focused, label }) {
-  //Alert.alert('lable', label[0])
   return (
     <View style={styles.item}>
       <View style={[styles.iconWrapper, focused ? styles.activeIcon : styles.inactiveIcon]}>
@@ -32,7 +31,7 @@ export default function BottomNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={AppNavigator}
         options={{
            tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
@@ -42,7 +41,7 @@ export default function BottomNavigator() {
       />
       <Tab.Screen
         name="Tokens"
-        component={TokenDetailScreen}
+        component={TokensStack}
         options={{
            tabBarLabel: '',
           tabBarIcon: ({ focused }) => (

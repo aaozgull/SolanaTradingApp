@@ -1,42 +1,100 @@
 // src/screens/TokenDetailScreen.js
 import React, { useState } from 'react';
 import { View,ScrollView, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { getQuote } from '../services/jupiter';
+import { getQuote, getSwapTransaction } from '../services/jupiter';
+import { Connection, VersionedTransaction } from '@solana/web3.js';
+import * as Buffer from 'buffer';
+import { useAuth } from '../context/AuthContext';
 import TabBar from '../components/TabBar';
 import PortfolioName from '../components/PortfolioName';
 import NumberInputWithStepper from '../components/NumberInputWithStepper';
 import ActionButton from '../components/ActionButton';
+import { useTokenContext } from '../context/TokenContext';
+
+global.Buffer = global.Buffer || Buffer; // Needed for React Native
+
+const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 export default function TokenDetailScreen({ route, navigation }) {
-  //const { token } = route.params; // Pass token from HomeScreen
-  const [amount, setAmount] = useState('0');
-  const [result, setResult] = useState(null);
-const [activeTab, setActiveTab] = useState('Buy');
-  const handleTrade = async () => {
-    try {
+   const { tokens, loading } = useTokenContext();
 
-     //  Alert.alert('token.mintAddress', token.mintAddress);
+  // Try to get token from route
+  let token = route.params?.token;
+  const balance = route.params?.balance;
+
+  // Fallback: if no token passed in, use the top token
+  if (!token && tokens.length > 0) {
+    token = tokens[0];
+  }  
+  const displayBalance = balance ?? token?.value?? 0;
+
+  const [amount, setAmount] = useState('0');
+  const [activeTab, setActiveTab] = useState('Buy');
+  const [quoteAmount, setQuoteAmount] = useState('0.00');
+   const { wallet} = useAuth();
+ 
+  const handleAmountChange = (newAmount) => {
+    setAmount(newAmount);
+    // Optionally: auto-fetch quote when amount changes
+  };
+
+  const handleTrade = async () => {
+    if (!wallet) {
+      Alert.alert('Error', 'Wallet not found.');
+      return;
+    }
+    if (!Number(amount) || Number(amount) <= 0) {
+      Alert.alert('Error', 'Amount must be greater than zero.');
+      return;
+    }
+
+
+    
+    if (!token.mintAddress) {
+      Alert.alert('Error', `Invalid output mint address. ${token.mintAddress}` );
+      return;
+    }
+    try {
       const quote = await getQuote({
-        inputMint: 'So11111111111111111111111111111111111111112', // SOL mint address
-        //outputMint: token.mintAddress,
-        amount: Number(amount) * 1e9, // Convert SOL to lamports
+        inputMint: 'So11111111111111111111111111111111111111112',
+        outputMint: token.mintAddress,
+        amount: Number(amount) * 1e9,
       });
-     //Alert.alert('quote', JSON.stringify(quote, null, 2));
-      setResult(quote);
-      //alert('Trade executed (mock)');
+
+      const swapTxBase64 = await getSwapTransaction(quote, wallet.address);
+
+      // Calculate how much user will receive
+      const outputAmount = quote.outAmount / 1e9; // adjust decimals if needed
+      setQuoteAmount(outputAmount.toFixed(6));
+
+      const txnBuffer = Buffer.Buffer.from(swapTxBase64, 'base64');
+      const transaction = VersionedTransaction.deserialize(txnBuffer);
+
+      // ✅ Sign with Privy wallet
+      const signedTx = await wallet.privySigner.signTransaction(transaction);
+
+      // ✅ Send
+      const txid = await connection.sendRawTransaction(signedTx.serialize());
+      Alert.alert('Success!', `Trade sent: ${txid}`);
+      
+
     } catch (err) {
       console.error(err);
-      Alert.alert('Trade Error', err?.message || JSON.stringify(err));
+      Alert.alert('Trade error', err.message);
     }
   };
-   const handleAction = () => {
-    Alert.alert(`You pressed: ${activeTab} BTC`);
-  };
+    if (loading || !token) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loading}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-              <PortfolioName name='Bitcoin' symbol='BTC' balance={192615.98} change={1764} />
+              <PortfolioName name={token.name} symbol={token.symbol} balance={displayBalance} change={displayBalance * 0.02} />
               <View style={{ height: 200, backgroundColor: '#1E1E1E', borderRadius: 12 }} /> 
 
                 
@@ -54,25 +112,22 @@ const [activeTab, setActiveTab] = useState('Buy');
      <NumberInputWithStepper
           label="Amount in USD"
           value={amount}
-          setValue={setAmount}
+          setValue={handleAmountChange}
 
           isVisible={true}
       />
 
       <NumberInputWithStepper
           label="You'll receive"
-          value='0.00 BTC'
-          setValue={setAmount}
+          value={quoteAmount}
+          setValue={() => {}} // Disable editing
       />
 
-      <ActionButton activeTab={activeTab} onPress={handleAction} />
-      {/* <Button title="Execute Trade" onPress={handleTrade} />
-      {result && (
-        <Text style={styles.result}>Quote: {JSON.stringify(result, null, 2)}</Text>
-      )} */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-  <Text style={styles.backArrow}>←</Text>
-</TouchableOpacity>
+      <ActionButton activeTab={activeTab} onPress={handleTrade} />
+     
+      {route.params  && <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Text style={styles.backArrow}>←</Text>
+      </TouchableOpacity>}
 
         </View>
     </ScrollView>
