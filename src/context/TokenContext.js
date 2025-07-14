@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Alert } from 'react-native';
 
 const TokenContext = createContext();
 
@@ -17,15 +18,7 @@ export const TokenProvider = ({ children }) => {
         );
         const coingeckoTokens = await coingeckoRes.json();
 
-        // const merged = coingeckoTokens.map((cg) => {
-        //   const jup = jupiterTokens.find(
-        //     (j) => j.extensions?.coingeckoId === cg.id
-        //   );
-        //   return {
-        //     ...cg,
-        //     mintAddress: jup ? jup.address : null,
-        //   };
-        // });
+       
         const merged = coingeckoTokens.map((cg) => {
           const jup = jupiterTokens.find(
             (j) =>
@@ -37,6 +30,7 @@ export const TokenProvider = ({ children }) => {
             mintAddress: jup ? jup.address : null,
           };
         });
+        Alert.alert('Token', merged?.length);
 
         setTokens(merged);
       } catch (err) {

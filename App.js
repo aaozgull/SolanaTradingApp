@@ -1,37 +1,29 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { PrivyProvider ,usePrivy} from '@privy-io/expo';
-//import { privy } from './src/lib/privyClient';
+
+import { useAuth, AuthProvider } from './src/context/AuthContext';
+import { TokenProvider } from './src/context/TokenContext';
+import { WalletProvider } from './src/context/WalletContext';
 import BottomNavigator from './src/navigations/BottomNavigator';
 import LoginScreen from './src/screens/LoginScreen';
-import { TokenProvider } from './src/context/TokenContext';
-import { PRIVY_APP_ID, PRIVY_ClIENT_ID } from './src/Utils/Config';
+import { NavigationContainer } from '@react-navigation/native';
 //import BottomNavigator from './src/BottomNavigator ';
 
 export default function App() {
-  return (  
-    <PrivyProvider
-      appId={PRIVY_APP_ID}
-      clientId={PRIVY_ClIENT_ID}
-    >
-    
+  return (
+    <AuthProvider>
+      {/* <WalletProvider> */}
       <TokenProvider>
     <NavigationContainer>
        <RootNavigator />
     </NavigationContainer>
     </TokenProvider>
-    
-    </PrivyProvider>
+    {/* </WalletProvider> */}
+    </AuthProvider>
   );
 }
 
-
-
 function RootNavigator() {
-  const { user, isReady } = usePrivy();
+  const { user } = useAuth();
 
-  if (!isReady) return null; // or your Loading screen
-
-  return user ? <BottomNavigator /> : <LoginScreen />;
-}
+  return user ? <BottomNavigator /> : <LoginScreen />;}
